@@ -1,0 +1,72 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+apply from: '/Volumes/MACDATA/Work/_tools/script-git-version.gradle'
+
+def superpowered_sdk_path = new File('/Volumes/MACDATA/Work/remote/SuperpoweredSDK/Superpowered')
+def lame_path = new File('/Volumes/MACDATA/Work/remote/libmp3lame')
+
+def lib_path = new File('/Volumes/MACDATA/Work/remote/bangrz/superpowered-wrapper/SuperpoweredWrapper/sp-wrapper-lib')
+
+android {
+    compileSdkVersion compileSdkVer
+    buildToolsVersion buildToolsVer
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion minSdkVer
+        targetSdkVersion targetSdkVer
+        versionName evalVersionName()
+        versionCode evalVersionCode()
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        setProperty("archivesBaseName", "sp-$versionName.$versionCode")
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64' // these platforms cover 99% percent of all Android devices
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-16",
+                        '-DANDROID_TOOLCHAIN=clang',
+                        '-DANDROID_ARM_NEON=TRUE',
+                        '-DANDROID_STL=gnustl_static',
+                        "-DPATH_TO_SUPERPOWERED:STRING=$superpowered_sdk_path",
+                        "-DPATH_TO_LAME:STRING=$lame_path",
+                        "-DPATH_TO_LIB:STRING=$lib_path"
+                cFlags '-O3',
+                        '-fsigned-char', // full optimization, char data type is signed
+                        '-DSTDC_HEADERS'
+                cppFlags '-fsigned-char', "-I$superpowered_sdk_path"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.jniLibs.srcDirs = ['src/main/jni']
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlinVersion"
+}

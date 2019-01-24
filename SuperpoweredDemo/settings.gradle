@@ -1,0 +1,2 @@
+include ':app', ':sp-wrapper-lib'
+project(':sp-wrapper-lib').projectDir = new File(rootProject.projectDir, '../SuperpoweredWrapper/sp-wrapper-lib')
